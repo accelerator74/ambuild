@@ -98,7 +98,7 @@ class CompatGCC(Vendor):
 class GCC(CompatGCC):
     def __init__(self, command, version):
         super(GCC, self).__init__('gcc', command, version)
-        self.debuginfo_argv = ['-g3', '-ggdb3']
+        #self.debuginfo_argv = ['-g3', '-ggdb3']
 
     def like(self, name):
         return name == 'gcc'
@@ -108,7 +108,7 @@ class Clang(CompatGCC):
         super(Clang, self).__init__(vendor_name, command, version)
         self.name = 'clang'  # Rewrite name to just 'clang' to make things easier.
         self.vendor_name = vendor_name
-        self.debuginfo_argv = ['-g3']
+        #self.debuginfo_argv = ['-g3']
 
     def like(self, name):
         return name == 'gcc' or name == 'clang' or name == self.vendor_name
@@ -130,7 +130,7 @@ class SunPro(Vendor):
     def __init__(self, command, version):
         super(SunPro, self).__init__('sun', version, 'sun', command, '.o')
         self.definePrefix = '-D'
-        self.debuginfo_argv = ['-g3']
+        #self.debuginfo_argv = ['-g3']
 
     def formatInclude(self, outputPath, includePath):
         return ['-I', os.path.normpath(includePath)]
