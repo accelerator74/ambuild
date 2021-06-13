@@ -105,7 +105,7 @@ class Clang(GCCLookalike):
 
     @property
     def debugInfoArgv(self):
-        return ['-g3']
+        return []
 
 class Emscripten(Clang):
     def __init__(self, version):
