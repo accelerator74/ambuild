@@ -119,6 +119,24 @@ class ContextManager(context_manager.ContextManager):
         scriptGlobals = self.execContext(cx)
         return scriptGlobals.get('rvalue', None)
 
+    def callBuilder(self, parent, fun):
+        if parent is not self.contextStack_[-1]:
+            raise Exception('Can only create child build contexts of the currently active context')
+
+        cx = BuildContext(cm = self,
+                          parent = parent,
+                          vars = copy.copy(parent.vars_),
+                          script = parent.script_,
+                          sourceFolder = parent.sourceFolder,
+                          buildFolder = parent.buildFolder)
+
+        self.pushContext(cx)
+        try:
+            rvalue = fun(cx.proxy_)
+        finally:
+            self.popContext()
+        return rvalue
+
     def execContext(self, context):
         code = self.compileScript(context.script_)
 
