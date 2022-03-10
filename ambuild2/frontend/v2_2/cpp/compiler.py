@@ -49,11 +49,23 @@ class Compiler(Cloneable):
         # An array of nodes which should be weak dependencies on each linker
         # command.
         'weaklinkdeps',
+
+        # An array of nodes which should be strong dependencies on each linker
+        # command.
+        'linkdeps',
+    ]
+
+    shallow_attrs_ = [
+        'linker',
+        'archiver',
+        'symbol_files_',
     ]
 
     def __init__(self, vendor, target, options = None):
         self.vendor = vendor
         self.target = target
+        self.linker = None
+        self.archiver = None
         for attr in self.attrs_:
             setattr(self, attr, [])
         if getattr(options, 'symbol_files', False):
@@ -64,8 +76,8 @@ class Compiler(Cloneable):
     def inherit(self, other):
         for attr in self.attrs_:
             setattr(self, attr, copy.copy(getattr(other, attr)))
-
-        self.symbol_files_ = other.symbol_files_
+        for attr in self.shallow_attrs_:
+            setattr(self, attr, getattr(other, attr))
 
     def clone(self):
         raise Exception('Must be implemented!')
@@ -139,6 +151,8 @@ class CliCompiler(Compiler):
         self.cxx_argv = cxx_argv
         self.found_pkg_config_ = False
         self.env_data = env_data
+        self.linker_argv = None
+        self.archiver_argv = None
 
     def clone(self):
         cc = CliCompiler(self.vendor, self.target, self.cc_argv, self.cxx_argv)
@@ -147,6 +161,8 @@ class CliCompiler(Compiler):
 
     def inherit(self, other):
         super(CliCompiler, self).inherit(other)
+        self.linker_argv = other.linker_argv
+        self.archiver_argv = other.archiver_argv
         self.env_data = other.env_data
 
     def __deepcopy__(self, memo):
