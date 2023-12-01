@@ -38,10 +38,18 @@ def export_fp(cm, node, fp):
     elif version >= 'msvc-1600':
         toolsVersion = '4.0'
 
-    scope = xml.block('Project',
-                      DefaultTargets = 'Build',
-                      ToolsVersion = toolsVersion,
-                      xmlns = 'http://schemas.microsoft.com/developer/msbuild/2003')
+    # Starting from VS2017, schema link is no longer required.
+    # Tools version is obsolete in VS2019 and later.
+    if version >= 'msvc-1920':
+        scope = xml.block('Project', DefaultTargets = 'Build')
+    elif version >= 'msvc-1910':
+        scope = xml.block('Project', DefaultTargets = 'Build', ToolsVersion = toolsVersion)
+    else:
+        scope = xml.block('Project',
+                          DefaultTargets = 'Build',
+                          ToolsVersion = toolsVersion,
+                          xmlns = 'http://schemas.microsoft.com/developer/msbuild/2003')
+
     with scope:
         export_body(cm, node, xml)
 
@@ -55,8 +63,9 @@ def export_body(cm, node, xml):
         xml.tag('RootNamespace', node.project.name_)
         xml.tag('Keyword', 'Win32Proj')
         if version >= 'msvc-1910':
-            xml.tag('WindowsTargetPlatformVersion',
-                    os.getenv('WindowsSDKVersion', None).rstrip('\\'))
+            win_sdk_version = os.getenv('WindowsSDKVersion', None)
+            if win_sdk_version:
+                xml.tag('WindowsTargetPlatformVersion', win_sdk_version.rstrip('\\'))
 
     xml.tag('Import', Project = '$(VCTargetsPath)\Microsoft.Cpp.Default.props')
     export_configuration_properties(node, xml)
@@ -82,16 +91,23 @@ def export_body(cm, node, xml):
     with xml.block('ImportGroup', Label = 'ExtensionTargets'):
         pass
 
+def get_target_platform(builder):
+    platform = 'Win32'
+    if builder.compiler.target.arch == 'x86_64':
+        platform = 'x64'
+    return platform
+
 def condition_for(builder):
-    full_tag = '{0}|Win32'.format(builder.tag_)
+    full_tag = '{0}|{1}'.format(builder.tag_, get_target_platform(builder))
     return "'$(Configuration)|$(Platform)'=='{0}'".format(full_tag)
 
 def export_configuration_headers(node, xml):
     for builder in node.project.builders_:
-        full_tag = '{0}|Win32'.format(builder.tag_)
+        platform = get_target_platform(builder)
+        full_tag = '{0}|{1}'.format(builder.tag_, platform)
         with xml.block('ProjectConfiguration', Include = full_tag):
             xml.tag('Configuration', builder.tag_)
-            xml.tag('Platform', 'Win32')
+            xml.tag('Platform', platform)
 
 def export_configuration_properties(node, xml):
     for builder in node.project.builders_:
@@ -103,7 +119,11 @@ def export_configuration_properties(node, xml):
                 xml.tag('WholeProgramOptimization', 'true')
 
             version = builder.compiler.version
-            if version >= 'msvc-1910':
+            if version >= 'msvc-1930':
+                xml.tag('PlatformToolset', 'v143')
+            elif version >= 'msvc-1920':
+                xml.tag('PlatformToolset', 'v142')
+            elif version >= 'msvc-1910':
                 xml.tag('PlatformToolset', 'v141')
             elif version >= 'msvc-1900':
                 xml.tag('PlatformToolset', 'v140')
@@ -268,7 +288,10 @@ def export_configuration_options(node, xml, builder):
         # Parse link flags.
         libs = ['%(AdditionalDependencies)']
         ignore_libs = ['%(IgnoreSpecificDefaultLibraries)']
+
         machine = 'X86'
+        if compiler.target.arch == 'x86_64':
+            machine = 'X64'
         subsystem = 'Windows'
         for flag in link_flags:
             if util.IsString(flag):
