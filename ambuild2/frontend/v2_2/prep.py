@@ -57,6 +57,10 @@ class Preparer(object):
             dest = "symbol_files",
             default = False,
             help = "Split debugging symbols from binaries into separate symbol files.")
+        self.options.add_argument("-o",
+                                  "--out",
+                                  default = None,
+                                  help = "Specify the out/build directory.")
 
         # Generator specific options.
         self.options.add_argument("--vs-version", type = str, dest = "vs_version", default = "14")
@@ -104,8 +108,12 @@ class Preparer(object):
         if options.no_color:
             util.DisableConsoleColors()
 
+        if args.out:
+            build_abspath = os.path.normpath(os.path.abspath(args.out))
+        else:
+            build_abspath = os.path.normpath(os.path.abspath(self.buildPath))
         source_abspath = os.path.normpath(os.path.abspath(self.sourcePath))
-        build_abspath = os.path.normpath(os.path.abspath(self.buildPath))
+
         if source_abspath == build_abspath:
             if util.IsString(self.default_build_folder):
                 objfolder = self.default_build_folder
@@ -133,6 +141,11 @@ class Preparer(object):
                              util.ConsoleNormal)
                 os.mkdir(new_buildpath)
             self.buildPath = new_buildpath
+        else:
+            self.buildPath = build_abspath
+
+        if args.out and not os.path.exists(self.buildPath):
+            os.makedirs(self.buildPath)
 
         from ambuild2.frontend.v2_2.context_manager import ContextManager
 
