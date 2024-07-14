@@ -60,17 +60,17 @@ def export_body(cm, node, xml):
     version = cm.generator.vs_vendor.version
     with xml.block('PropertyGroup', Label = 'Globals'):
         xml.tag('ProjectGuid', '{{{0}}}'.format(node.uuid))
-        xml.tag('RootNamespace', node.project.name_)
+        xml.tag('RootNamespace', node.project.name)
         xml.tag('Keyword', 'Win32Proj')
         if version >= 'msvc-1910':
             win_sdk_version = os.getenv('WindowsSDKVersion', None)
             if win_sdk_version:
                 xml.tag('WindowsTargetPlatformVersion', win_sdk_version.rstrip('\\'))
 
-    xml.tag('Import', Project = '$(VCTargetsPath)\Microsoft.Cpp.Default.props')
+    xml.tag('Import', Project = '$(VCTargetsPath)\\Microsoft.Cpp.Default.props')
     export_configuration_properties(node, xml)
 
-    xml.tag('Import', Project = '$(VCTargetsPath)\Microsoft.Cpp.props')
+    xml.tag('Import', Project = '$(VCTargetsPath)\\Microsoft.Cpp.props')
     with xml.block('ImportGroup', Label = 'ExtensionSettings'):
         pass
     export_configuration_user_props(node, xml)
@@ -87,7 +87,7 @@ def export_body(cm, node, xml):
 
     export_source_files(node, xml)
 
-    xml.tag('Import', Project = '$(VCTargetsPath)\Microsoft.cpp.targets')
+    xml.tag('Import', Project = '$(VCTargetsPath)\\Microsoft.cpp.targets')
     with xml.block('ImportGroup', Label = 'ExtensionTargets'):
         pass
 
@@ -137,8 +137,8 @@ def export_configuration_user_props(node, xml):
         condition = condition_for(builder)
         with xml.block('ImportGroup', Condition = condition, Label = 'PropertySheets'):
             xml.tag('Import',
-                    Project = "$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props",
-                    Condition = "exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')",
+                    Project = "$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props",
+                    Condition = "exists('$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props')",
                     Label = "LocalAppDataPlatform")
 
 def export_configuration_paths(node, xml):
@@ -224,7 +224,7 @@ def export_configuration_options(node, xml, builder):
         elif '/Ot' in flags:
             xml.tag('FavorSizeOrSpeed', 'Speed')
 
-        xml.tag('MinimalRebuild', 'true')
+        xml.tag('MinimalRebuild', 'false')
 
         if '/RTC1' in flags or '/RTCsu' in flags:
             xml.tag('BasicRuntimeChecks', 'EnableFastChecks')
