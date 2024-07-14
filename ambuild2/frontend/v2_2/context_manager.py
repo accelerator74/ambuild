@@ -142,6 +142,7 @@ class ContextManager(context_manager.ContextManager):
 
         # Copy vars so changes don't get inherited.
         scriptGlobals = copy.copy(context.vars_)
+        scriptGlobals['__file__'] = context.script_
 
         self.pushContext(context)
         try:
@@ -175,7 +176,12 @@ class ContextManager(context_manager.ContextManager):
             sourceFolder = ''
             buildFolder = ''
 
-        return sourceFolder, buildFolder, os.path.join(sourceFolder, name)
+        if os.path.isabs(target):
+            full_script_path = target
+        else:
+            full_script_path = os.path.join(sourceFolder, name)
+
+        return sourceFolder, buildFolder, full_script_path
 
     def getLocalFolder(self, context):
         return context.buildFolder
