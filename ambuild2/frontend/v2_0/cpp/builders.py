@@ -401,7 +401,6 @@ class Library(BinaryBuilder):
             argv.extend(self.linkFlags(cx))
             argv += [
                 '/OUT:' + self.outputFile,
-                '/DEBUG',
                 '/nologo',
                 '/DLL',
             ]
