@@ -71,8 +71,8 @@ class MSVC(Vendor):
             '/OUT:' + outputFile,
             '/nologo',
         ]
-        #if symbolFile:
-            #argv += ['/DEBUG', '/PDB:"' + symbolFile + '.pdb"']
+        if symbolFile:
+            argv += ['/DEBUG', '/PDB:"' + symbolFile + '.pdb"']
         return argv
 
     def libLinkArgv(self, cmd_argv, files, linkFlags, symbolFile, outputFile):
@@ -84,8 +84,8 @@ class MSVC(Vendor):
             '/nologo',
             '/DLL',
         ]
-        #if symbolFile:
-            #argv += ['/DEBUG', '/PDB:"' + symbolFile + '.pdb"']
+        if symbolFile:
+            argv += ['/DEBUG', '/PDB:"' + symbolFile + '.pdb"']
         return argv
 
     def preprocessArgv(self, sourceFile, outFile):

@@ -372,8 +372,8 @@ class Program(BinaryBuilder):
                 '/OUT:' + self.outputFile,
                 '/nologo',
             ]
-            #if self.compiler.debug_symbols:
-                #argv += ['/DEBUG', '/PDB:"' + self.name_ + '.pdb"']
+            if self.compiler.debug_symbols:
+                argv += ['/DEBUG', '/PDB:"' + self.name_ + '.pdb"']
         else:
             argv.extend(self.linkFlags(cx))
             argv.extend(['-o', self.outputFile])
@@ -401,12 +401,12 @@ class Library(BinaryBuilder):
             argv.extend(self.linkFlags(cx))
             argv += [
                 '/OUT:' + self.outputFile,
-                #'/DEBUG',
+                '/DEBUG',
                 '/nologo',
                 '/DLL',
             ]
-            #if self.compiler.debug_symbols:
-                #argv += ['/DEBUG', '/PDB:"' + self.name_ + '.pdb"']
+            if self.compiler.debug_symbols:
+                argv += ['/DEBUG', '/PDB:"' + self.name_ + '.pdb"']
         elif isinstance(self.linker_, CompatGCC):
             argv.extend(self.linkFlags(cx))
             if util.IsMac():
