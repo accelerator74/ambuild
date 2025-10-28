@@ -18,7 +18,7 @@ import os, re
 from ambuild2 import util
 from ambuild2.frontend import paths
 from ambuild2.frontend.cpp import cpp_utils
-from ambuild2.frontend.version import Version
+from ambuild2.frontend.v2_2.vs import custom_tools
 from ambuild2.frontend.vs.xmlbuilder import XmlBuilder
 
 def export(cm, node):
@@ -91,6 +91,10 @@ def export_body(cm, node, xml):
     with xml.block('ImportGroup', Label = 'ExtensionTargets'):
         pass
 
+    for builder in node.project.builders_:
+        custom_tools_list = custom_tools.find_custom_tools(builder)
+        custom_tools.add_custom_tool_output_files(node, xml, builder, custom_tools_list)
+
 def get_target_platform(builder):
     platform = 'Win32'
     if builder.compiler.target.arch == 'x86_64':
@@ -149,6 +153,8 @@ def export_configuration_paths(node, xml):
         if '/INCREMENTAL:NO' not in builder.compiler.linkflags and '/INCREMENTAL:NO' not in builder.compiler.postlink:
             xml.tag('LinkIncremental', 'true', Condition = condition)
         xml.tag('TargetName', builder.name_, Condition = condition)
+        if hasattr(builder, 'custom') and len(builder.custom) >= 1:
+            xml.tag('CustomBuildBeforeTargets', "PreBuildEvent", Condition = condition)
 
 def sanitize_val_defines(defines):
     new_defines = []
@@ -186,10 +192,16 @@ def export_configuration_options(node, xml, builder):
         else:
             includes.append(include)
 
+    custom_tools_list = custom_tools.find_custom_tools(builder)
+    includes = custom_tools.add_custom_tool_include_paths(includes, node, builder,
+                                                          custom_tools_list)
+
     all_defines = compiler.defines + compiler.cxxdefines
     simple_defines = ['%(PreprocessorDefinitions)'
                      ] + [option for option in all_defines if '=' not in option]
     val_defines = ['/D{0}'.format(option) for option in all_defines if '=' in option]
+
+    custom_tools.add_custom_tool_prebuild_events(xml, node, builder, custom_tools_list)
 
     with xml.block('ClCompile'):
         flags = compiler.cflags + compiler.cxxflags
